@@ -36,10 +36,11 @@ apple_img = pygame.image.load('apple.png')
 apple_img = pygame.transform.scale(apple_img, (20, 20))
 
 # defining snake default position
-snake_position = [100, 50]
+# defining snake default position
+snake_position = [100, 60]
 
 # defining first 4 blocks of snake body
-snake_body = [[100, 50], [90, 50], [80, 50], [70, 50]]
+snake_body = [[100, 60], [90, 60], [80, 60], [70, 60]]
 
 # fruit position
 fruit_position = [random.randrange(1, (window_x//20)) * 20,
@@ -83,50 +84,20 @@ def auto_play(snake_position, snake_body, fruit_position, direction):
         'RIGHT': [snake_position[0]+20, snake_position[1]]
     }
 
-    for d in directions:
+    # Remove directions that would immediately cause game over
+    for d in directions.copy():
         if (pos_if_move[d] in snake_body) or (pos_if_move[d][0] < 0) or (pos_if_move[d][0] >= window_x) or (pos_if_move[d][1] < 0) or (pos_if_move[d][1] >= window_y):
             directions.remove(d)
 
     if not directions:
-        return direction
+        return direction  # No safe directions to go!
 
-    # Check if snake and apple are in the same row or 1 row apart
-    if abs(snake_position[1] - fruit_position[1]) <= 20:
-        # Prioritize horizontal movement if apple is to the left or right
-        if snake_position[0] > fruit_position[0]:
-            if 'LEFT' in directions:
-                return 'LEFT'
-        else:
-            if 'RIGHT' in directions:
-                return 'RIGHT'
-        # If can't move horizontally, then try vertical
-        if snake_position[1] > fruit_position[1] and 'UP' in directions:
-            return 'UP'
-        elif 'DOWN' in directions:
-            return 'DOWN'
+    # Prioritize directions based on distance to fruit
+    distances_to_fruit = {d: abs(pos_if_move[d][0] - fruit_position[0]) + abs(pos_if_move[d][1] - fruit_position[1]) for d in directions}
+    safest_direction = min(distances_to_fruit, key=distances_to_fruit.get)
 
-    # General case (not in the same row or 1 row apart)
-    directions_to_fruit = []
-    if snake_position[0] == fruit_position[0]:  # same column
-        if snake_position[1] > fruit_position[1]:
-            directions_to_fruit.append('UP')
-        else:
-            directions_to_fruit.append('DOWN')
-    else:  # not in the same row or column
-        if snake_position[0] > fruit_position[0]:
-            directions_to_fruit.append('LEFT')
-        elif snake_position[0] < fruit_position[0]:
-            directions_to_fruit.append('RIGHT')
-        if snake_position[1] > fruit_position[1]:
-            directions_to_fruit.append('UP')
-        else:
-            directions_to_fruit.append('DOWN')
+    return safest_direction
 
-    safe_directions_to_fruit = [d for d in directions if d in directions_to_fruit]
-    if safe_directions_to_fruit:
-        return safe_directions_to_fruit[0]
-    else:
-        return directions[0]
 
 
 
